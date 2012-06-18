@@ -21,8 +21,12 @@ class CommentThread < ActiveRecord::Base
     comment = Comment.create! :comment_thread => self
   end
 
+  def comments
+    super_comment.children
+  end
+
   def json_comments
-    super_comment.children.map(&:json_tree).to_json
+    comments.map(&:json_tree).to_json
   end
 
   def self.mock_comment_thread
