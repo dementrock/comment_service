@@ -7,29 +7,7 @@ describe "app" do
       Comment.delete_all
       CommentThread.delete_all
     end
-    describe "create empty thread on request" do
-      it "should create a corresponding comment thread with a super comment" do
-        get "/api/v1/commentable/questions/1/comments"
-        last_response.should be_ok
-        comment_thread = CommentThread.first
-        comment_thread.should_not be_nil
-        comment_thread.super_comment.should_not be_nil
-      end
-      it "should create a corresponding comment thread with correct type and id" do
-        get "/api/v1/commentable/questions/1/comments"
-        last_response.should be_ok
-        comment_thread = CommentThread.first
-        comment_thread.commentable_type.should == 'questions'
-        comment_thread.commentable_id.should == '1'
-      end
-      it "should return an empty json when there are no comments" do
-        get "/api/v1/commentable/questions/1/comments"
-        last_response.should be_ok
-        attributes = JSON.parse(last_response.body)
-        attributes.length.should == 0
-      end
-    end
-    describe "create top-level comments" do
+    describe "POST on /api/v1/commentable/:commentable_type/:commentable_id/comments" do
       it "should create a top-level comment with correct body, title, user_id, and course_id" do
         post "/api/v1/commentable/questions/1/comments", :body => "comment body", :title => "comment title", :user_id => 1, :course_id => 1
         last_response.should be_ok
@@ -41,7 +19,7 @@ describe "app" do
         comment.user_id.should == 1
       end
     end
-    describe "create sub comments" do
+    describe "POST on /api/v1/comment/:comment_id" do
       before :each do
         CommentThread.create! :commentable_type => "questions", :commentable_id => 1
         CommentThread.first.root_comments.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1
@@ -63,7 +41,21 @@ describe "app" do
         last_response.status.should == 400
       end
     end
-    describe "retrieve comments" do
+    describe "GET on /api/v1/commentable/:commentable_type/:commentable_id/comments" do
+      it "should create a corresponding comment thread with a super comment" do
+        get "/api/v1/commentable/questions/1/comments"
+        last_response.should be_ok
+        comment_thread = CommentThread.first
+        comment_thread.should_not be_nil
+        comment_thread.super_comment.should_not be_nil
+      end
+      it "should create a corresponding comment thread with correct type and id" do
+        get "/api/v1/commentable/questions/1/comments"
+        last_response.should be_ok
+        comment_thread = CommentThread.first
+        comment_thread.commentable_type.should == 'questions'
+        comment_thread.commentable_id.should == '1'
+      end
       it "returns an empty array when there are no comments" do
         get "/api/v1/commentable/questions/1/comments"
         last_response.should be_ok
@@ -93,7 +85,7 @@ describe "app" do
         end
       end
     end
-    describe "delete comments" do
+    describe "DELETE on /api/v1/commentable/:commentable_type/:commentable_id" do
       before :each do
         comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
         comment = []
@@ -130,7 +122,7 @@ describe "app" do
         last_response.status.should == 400
       end
     end
-    describe "edit comments" do
+    describe "PUT on /api/v1/comment/comment_id" do
       before :each do
         comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
         comment_thread.root_comments.create :body => "top comment", :title => "top 0", :user_id => 1, :course_id => 1
@@ -164,7 +156,7 @@ describe "app" do
       Comment.delete_all
       Vote.delete_all
     end
-    describe "vote on comment" do
+    describe "PUT on /api/v1/votes/comments/:comment_id/users/:user_id" do
       before :each do
         CommentThread.create! :commentable_type => "questions", :commentable_id => 1
         CommentThread.first.root_comments.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1
@@ -207,7 +199,7 @@ describe "app" do
         Vote.first.value.should == "down"
       end
     end
-    describe "unvote on comment" do
+    describe "DELETE on /api/v1/votes/comments/:comment_id/users/:user_id" do
       before :each do
         CommentThread.create! :commentable_type => "questions", :commentable_id => 1
         CommentThread.first.root_comments.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1
