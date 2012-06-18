@@ -11,15 +11,16 @@ describe "app" do
     it "should create a corresponding comment thread with a super comment" do
       get "/api/v1/questions/1/comments"
       last_response.should be_ok
-      CommentThread.first.should_not be_nil
-      CommentThread.first.super_comment.should_not be_nil
+      comment_thread = CommentThread.first
+      comment_thread.should_not be_nil
+      comment_thread.super_comment.should_not be_nil
     end
     it "should create a corresponding comment thread with correct type and id" do
       get "/api/v1/questions/1/comments"
       last_response.should be_ok
-      CommentThread.first.should_not be_nil
-      CommentThread.first.commentable_type.should == 'questions'
-      CommentThread.first.commentable_id.should == '1'
+      comment_thread = CommentThread.first
+      comment_thread.commentable_type.should == 'questions'
+      comment_thread.commentable_id.should == '1'
     end
     it "should return a 400 bad request if commentable_id is not an integer" do
       get "/api/v1/questions/a_question/comments"
@@ -75,20 +76,25 @@ describe "app" do
     end
     it "retrieves all comments in a nested structure in json format" do
       comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
-      comment1 = comment_thread.comments.create :body => "top comment", :title => "top1", :user_id => 1, :course_id => 1
-      sub_comment1 = comment1.children.create :body => "comment body", :title => "comment title 1", :user_id => 1, :course_id => 1
-      comment2 = comment_thread.comments.create :body => "top comment", :title => "top2", :user_id => 1, :course_id => 1
-      sub_comment2 = comment2.children.create :body => "comment body", :title => "comment title 2", :user_id => 1, :course_id => 1
+      comment = []
+      sub_comment = []
+      comment << (comment_thread.comments.create :body => "top comment", :title => "top 0", :user_id => 1, :course_id => 1)
+      sub_comment << (comment[0].children.create :body => "comment body", :title => "comment title 0", :user_id => 1, :course_id => 1)
+      comment << (comment_thread.comments.create :body => "top comment", :title => "top 1", :user_id => 1, :course_id => 1)
+      sub_comment << (comment[1].children.create :body => "comment body", :title => "comment title 1", :user_id => 1, :course_id => 1)
       get "/api/v1/questions/1/comments"
       last_response.should be_ok
       comments = Yajl::Parser.parse last_response.body
       comments.length.should == 2
-      comments[0]["title"].should == "top1"
-      comments[0]["children"].length.should == 1
-      comments[0]["children"][0]["title"].should == "comment title 1"
-      comments[1]["title"].should == "top2"
-      comments[1]["children"].length.should == 1
-      comments[1]["children"][0]["title"].should == "comment title 2"
+      comments.each_with_index do |comment, index|
+        comment["title"].should == "top #{index}"
+        comment["id"].should == comment[index].id.to_s
+        comment["reply_to"].should == "/api/v1/comment/#{comment[index].id}"
+        comment["children"].length.should == 1
+        comment["children"][0]["title"].should == "comment title #{index}"
+        comment["children"][0]["id"].should == sub_comment[index].id.to_s
+        comment["children"][0]["reply_to"].should == "/api/v1/comment/#{sub_comment[index].id}"
+      end
     end
   end
 end
