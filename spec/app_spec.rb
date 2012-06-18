@@ -34,7 +34,7 @@ describe "app" do
     it "should create a top-level comment with correct body, title, user_id, and course_id" do
       post "/api/v1/questions/1/comments", :body => "comment body", :title => "comment title", :user_id => 1, :course_id => 1
       last_response.should be_ok
-      comment = CommentThread.first.super_comment.children.first
+      comment = CommentThread.first.comments.first
       comment.should_not be_nil
       comment.body.should == "comment body"
       comment.title.should == "comment title"
@@ -45,7 +45,7 @@ describe "app" do
   describe "create sub comments" do
     before :each do
       CommentThread.create! :commentable_type => "questions", :commentable_id => 1
-      CommentThread.first.super_comment.children.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1
+      CommentThread.first.comments.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1
     end
     it "should create a sub comment with correct body, title, user_id, and course_id" do
       post "/api/v1/questions/1/comment/#{CommentThread.first.comments.first.id}", 
