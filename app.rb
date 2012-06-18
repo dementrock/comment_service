@@ -50,7 +50,7 @@ end
 # create a new subcomment (reply to comment) only if the comment is NOT a super comment
 post '/api/v1/comment/:comment_id' do |comment_id|
   comment = Comment.find_by_id(comment_id)
-  if comment.nil? or not comment.comment_thread.nil?
+  if comment.nil? or comment.is_root?
     error 400, {:error => "invalid comment id"}.to_json
   else
     comment_params = params.select {|key, value| %w{body title user_id course_id}.include? key}
@@ -66,7 +66,7 @@ end
 # delete the comment and the associated sub comments only if the comment is NOT the super comment
 delete '/api/v1/comment/:comment_id' do |comment_id|
   comment = Comment.find_by_id(comment_id)
-  if comment.nil? or not comment.comment_thread.nil?
+  if comment.nil? or not comment.is_root?
     error 400, {:error => "invalid comment id"}.to_json
   else
     comment.destroy
@@ -77,7 +77,7 @@ end
 # update the body / title (or both) of a comment provided the comment is NOT the super comment
 put '/api/v1/comment/:comment_id' do |comment_id|
   comment = Comment.find_by_id(comment_id)
-  if comment.nil? or not comment.comment_thread.nil?
+  if comment.nil? or not comment.is_root?
     error 400, {:error => "invalid comment id"}.to_json
   else
     comment_params = params.select {|key, value| %w{body title}.include? key}
