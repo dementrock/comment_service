@@ -1,7 +1,5 @@
 require 'spec_helper'
 require 'yajl'
-require 'pp'
-use Rack::MethodOverride
 
 describe "app" do
   describe "comments" do
