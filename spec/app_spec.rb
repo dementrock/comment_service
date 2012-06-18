@@ -70,9 +70,9 @@ describe "app" do
     before :each do
       comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
       comment1 = comment_thread.comments.create :body => "top comment", :title => "top1", :user_id => 1, :course_id => 1
-      sub_comment1 = comment1.children.create :body => "comment body", :title => "comment title1", :user_id => 1, :course_id => 1
+      sub_comment1 = comment1.children.create :body => "comment body", :title => "comment title 1", :user_id => 1, :course_id => 1
       comment2 = comment_thread.comments.create :body => "top comment", :title => "top2", :user_id => 1, :course_id => 1
-      sub_comment2 = comment2.children.create :body => "comment body", :title => "comment title2", :user_id => 1, :course_id => 1
+      sub_comment2 = comment2.children.create :body => "comment body", :title => "comment title 2", :user_id => 1, :course_id => 1
     end
     it "retrives all comments in a nested structure in json format" do
       get "/api/v1/questions/1/comments"
@@ -81,10 +81,10 @@ describe "app" do
       comments.length.should == 2
       comments[0]["title"].should == "top1"
       comments[0]["children"].length.should == 1
-      comments[0]["children"][0]["title"].should == "comment title1"
+      comments[0]["children"][0]["title"].should == "comment title 1"
       comments[1]["title"].should == "top2"
       comments[1]["children"].length.should == 1
-      comments[1]["children"][0]["title"].should == "comment title2"
+      comments[1]["children"][0]["title"].should == "comment title 2"
     end
   end
 end
