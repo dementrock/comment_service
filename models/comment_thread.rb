@@ -21,8 +21,12 @@ class CommentThread < ActiveRecord::Base
     comment = Comment.create! :comment_thread => self
   end
 
-  def comments
+  def root_comments
     super_comment.children
+  end
+
+  def comments
+    super_comment.descendants
   end
 
   def json_comments

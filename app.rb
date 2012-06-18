@@ -35,7 +35,7 @@ post '/api/v1/:commentable_type/:commentable_id/comments' do |commentable_type, 
   else
     comment_thread = CommentThread.find_or_create_by_commentable_type_and_commentable_id(commentable_type, commentable_id)
     comment_params = params.select {|key, value| %w{body title user_id course_id}.include? key}
-    comment = comment_thread.super_comment.children.create(comment_params)
+    comment = comment_thread.root_comments.create(comment_params)
     if comment.valid?
       comment.to_json
     else
