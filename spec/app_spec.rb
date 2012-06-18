@@ -211,10 +211,28 @@ describe "app" do
         last_response.should be_ok
         Vote.count.should == 0
       end
-      it "return 400 for nonexisted vote" do
+      it "returns 400 for nonexisted vote" do
         comment = CommentThread.first.comments.first 
         delete "/api/v1/votes/comments/#{comment.id}/users/1"
         last_response.status.should == 400
+      end
+    end
+    describe "GET on /api/v1/votes/comments/:comment_id/total" do
+      it "returns the up and down vote total" do
+        comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
+        comment = CommentThread.first.root_comments.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1
+        Vote.create! :value => "up", :comment_id => comment.id, :user_id => 1
+        Vote.create! :value => "up", :comment_id => comment.id, :user_id => 2
+        Vote.create! :value => "up", :comment_id => comment.id, :user_id => 3
+        Vote.create! :value => "up", :comment_id => comment.id, :user_id => 4
+        Vote.create! :value => "down", :comment_id => comment.id, :user_id => 5
+        Vote.create! :value => "down", :comment_id => comment.id, :user_id => 6
+        Vote.create! :value => "down", :comment_id => comment.id, :user_id => 7
+        get "/api/v1/votes/comments/#{comment.id}/total"
+        last_response.should be_ok
+        values = Yajl::Parser.parse last_response.body
+        values["up"].should == 4
+        values["down"].should == 3
       end
     end
   end
