@@ -12,8 +12,10 @@ class Comment < ActiveRecord::Base
   def self.hash_tree(nodes)
     nodes.map do |node, sub_nodes|
       {
+        :id => node.id,
         :body => node.body, 
         :title => node.title, 
+        :reply_url => "/api/v1/comment/#{node.id}",
         :user_id => node.user_id, 
         :course_id => node.course_id,
         :children => hash_tree(sub_nodes).compact

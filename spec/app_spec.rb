@@ -86,14 +86,14 @@ describe "app" do
       last_response.should be_ok
       comments = Yajl::Parser.parse last_response.body
       comments.length.should == 2
-      comments.each_with_index do |comment, index|
-        comment["title"].should == "top #{index}"
-        comment["id"].should == comment[index].id.to_s
-        comment["reply_to"].should == "/api/v1/comment/#{comment[index].id}"
-        comment["children"].length.should == 1
-        comment["children"][0]["title"].should == "comment title #{index}"
-        comment["children"][0]["id"].should == sub_comment[index].id.to_s
-        comment["children"][0]["reply_to"].should == "/api/v1/comment/#{sub_comment[index].id}"
+      comments.each_with_index do |c, index|
+        c["title"].should == "top #{index}"
+        c["id"].should == comment[index].id
+        c["reply_url"].should == "/api/v1/comment/#{comment[index].id}"
+        c["children"].length.should == 1
+        c["children"][0]["title"].should == "comment title #{index}"
+        c["children"][0]["id"].should == sub_comment[index].id
+        c["children"][0]["reply_url"].should == "/api/v1/comment/#{sub_comment[index].id}"
       end
     end
   end
