@@ -1,4 +1,6 @@
 require 'spec_helper'
+require 'yajl'
+require 'pp'
 
 describe "app" do
   before :each do
@@ -57,6 +59,32 @@ describe "app" do
       comment.title.should == "comment title"
       comment.user_id.should == 1
       comment.user_id.should == 1
+    end
+    it "should not create a sub comment for the super comment" do
+      post "/api/v1/comment/#{CommentThread.first.super_comment.id}", 
+           :body => "comment body", :title => "comment title", :user_id => 1, :course_id => 1
+      last_response.status.should == 400
+    end
+  end
+  describe "retrive comments" do
+    before :each do
+      comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
+      comment1 = comment_thread.comments.create :body => "top comment", :title => "top1", :user_id => 1, :course_id => 1
+      sub_comment1 = comment1.children.create :body => "comment body", :title => "comment title1", :user_id => 1, :course_id => 1
+      comment2 = comment_thread.comments.create :body => "top comment", :title => "top2", :user_id => 1, :course_id => 1
+      sub_comment2 = comment2.children.create :body => "comment body", :title => "comment title2", :user_id => 1, :course_id => 1
+    end
+    it "retrives all comments in a nested structure in json format" do
+      get "/api/v1/questions/1/comments"
+      last_response.should be_ok
+      comments = Yajl::Parser.parse last_response.body
+      comments.length.should == 2
+      comments[0]["title"].should == "top1"
+      comments[0]["children"].length.should == 1
+      comments[0]["children"][0]["title"].should == "comment title1"
+      comments[1]["title"].should == "top2"
+      comments[1]["children"].length.should == 1
+      comments[1]["children"][0]["title"].should == "comment title2"
     end
   end
 end

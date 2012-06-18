@@ -26,22 +26,7 @@ class CommentThread < ActiveRecord::Base
   end
 
   def json_comments
-    comments.map(&:json_tree).to_json
+    super_comment.to_hash_tree.first[:children].to_json
   end
 
-  def self.mock_comment_thread
-    create! :body => "i dont understand",
-            :title => "dont understand", 
-            :user_id => 0,
-            :course_id => 0,
-            :commentable_type => "question",
-            :commentable_id => 0
-  end
-
-private
-  def json_tree(nodes)
-    nodes.map do |node, sub_nodes|
-      node.to_json.merge :children => json_tree(sub_nodes).compact
-    end
-  end
 end
