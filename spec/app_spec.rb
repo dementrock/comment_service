@@ -124,5 +124,38 @@ describe "app" do
       comment_thread.root_comments.first.title.should == "top 1"
       comment_thread.root_comments.first.children.first.title.should == "comment title 1"
     end
+    it "should not delete the super comment" do
+      comment_thread = CommentThread.first
+      comment = comment_thread.super_comment
+      delete "/api/v1/comment/#{comment.id}"
+      last_response.status.should == 400
+    end
+  end
+  describe "edit comments" do
+    before :each do
+      comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
+      comment_thread.root_comments.create :body => "top comment", :title => "top 0", :user_id => 1, :course_id => 1
+    end
+    it "should update body and title" do
+      comment = CommentThread.first.comments.first
+      put "/api/v1/comment/#{comment.id}", :body => "new body", :title => "new title"
+      last_response.should be_ok
+      comment = CommentThread.first.comments.first
+      comment.body.should == "new body"
+      comment.title.should == "new title"
+    end
+    it "should not update the super comment" do
+      comment = CommentThread.first.super_comment
+      put "/api/v1/comment/#{comment.id}", :body => "new body", :title => "new title"
+      last_response.status.should == 400
+    end
+    it "should not update user_id nor course_id" do
+      comment = CommentThread.first.comments.first
+      put "/api/v1/comment/#{comment.id}", :user_id => 100, :course_id => 100
+      last_response.should be_ok
+      comment = CommentThread.first.comments.first
+      comment.user_id.should == 1
+      comment.course_id.should == 1
+    end
   end
 end

@@ -63,12 +63,28 @@ post '/api/v1/comment/:comment_id' do |comment_id|
   end
 end
 
+# delete the comment and the associated sub comments only if the comment is NOT the super comment
 delete '/api/v1/comment/:comment_id' do |comment_id|
   comment = Comment.find_by_id(comment_id)
-  if comment.nil?
-    error 400, {:error => "comment does not exist"}.to_json
+  if comment.nil? or not comment.comment_thread.nil?
+    error 400, {:error => "invalid comment id"}.to_json
   else
     comment.destroy
     comment.to_json
+  end
+end
+
+# update the body / title (or both) of a comment provided the comment is NOT the super comment
+put '/api/v1/comment/:comment_id' do |comment_id|
+  comment = Comment.find_by_id(comment_id)
+  if comment.nil? or not comment.comment_thread.nil?
+    error 400, {:error => "invalid comment id"}.to_json
+  else
+    comment_params = params.select {|key, value| %w{body title}.include? key}
+    if comment.update_attributes(comment_params)
+      comment.to_json
+    else
+      error 400, comment.errors.to_json
+    end
   end
 end
