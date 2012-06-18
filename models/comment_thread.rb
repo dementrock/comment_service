@@ -18,7 +18,7 @@ class CommentThread < ActiveRecord::Base
   after_create :create_super_comment
   
   def create_super_comment
-    comment = Comment.create! :comment_thread => self
+    comment = Comment.create! :comment_thread_id => self.id
   end
 
   def root_comments

@@ -3,9 +3,11 @@ require 'ancestry'
 
 class Comment < ActiveRecord::Base
 
-  attr_accessible :body, :title, :user_id, :course_id, :comment_thread
+  attr_accessible :body, :title, :user_id, :course_id, :comment_thread_id
 
   has_ancestry
+
+  has_many :votes
 
   belongs_to :comment_thread
 
