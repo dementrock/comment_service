@@ -11,4 +11,14 @@ class Comment < ActiveRecord::Base
     create! :body => "here it is", :user_id => 0, :course_id => 0
   end
 
+  def self.json_tree(nodes)
+    nodes.map do |node, sub_nodes|
+      node.to_json.merge(:children => json_tree(sub_nodes).compact)
+    end
+  end
+
+  def to_json_tree
+    self.class.json_tree(self.subtree.arrange)
+  end
+
 end

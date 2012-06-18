@@ -17,6 +17,10 @@ class CommentThread < ActiveRecord::Base
     Comment.create! :comment_thread => self
   end
 
+  def json_comments
+    super_comment.children.map(&:json_tree).to_json
+  end
+
   def self.mock_comment_thread
     create! :body => "i dont understand",
             :title => "dont understand", 
@@ -26,4 +30,10 @@ class CommentThread < ActiveRecord::Base
             :commentable_id => 0
   end
 
+private
+  def json_tree(nodes)
+    nodes.map do |node, sub_nodes|
+      node.to_json.merge :children => json_tree(sub_nodes).compact
+    end
+  end
 end
