@@ -13,12 +13,6 @@ env = env_arg || ENV["SINATRA_ENV"] || "development"
 databases = YAML.load_file("config/database.yml")
 ActiveRecord::Base.establish_connection(databases[env])
 
-class String
-  def is_i?
-    self.to_i.to_s == self
-  end
-end
-
 # retrive all comments of a commentable object
 get '/api/v1/commentable/:commentable_type/:commentable_id/comments' do |commentable_type, commentable_id|
   comment_thread = CommentThread.find_or_create_by_commentable_type_and_commentable_id(commentable_type, commentable_id)
@@ -90,6 +84,7 @@ put '/api/v1/comment/:comment_id' do |comment_id|
   end
 end
 
+# create or update the vote on the comment by the user
 put '/api/v1/votes/comments/:comment_id/users/:user_id' do |comment_id, user_id|
   if not %w{up down}.include? params["value"]
     error 400, {:error => "value must be up or down"}.to_json
@@ -108,6 +103,7 @@ put '/api/v1/votes/comments/:comment_id/users/:user_id' do |comment_id, user_id|
   end
 end
 
+# undo the vote on the comment by the user
 delete '/api/v1/votes/comments/:comment_id/users/:user_id' do |comment_id, user_id|
   vote = Vote.find_by_comment_id_and_user_id(comment_id, user_id)
   if vote.nil?
