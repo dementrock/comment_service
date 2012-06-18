@@ -8,6 +8,14 @@ describe "app" do
   end
 
   describe "create empty thread on request" do
+
+    it "should create a corresponding comment thread with a super comment" do
+      get '/api/v1/questions/1/comments'
+      last_response.should be_ok
+      CommentThread.first.should_not be_nil
+      CommentThread.first.super_comment.should_not be_nil
+    end
+
     it "should create a corresponding comment thread with correct type and id" do
       get '/api/v1/questions/1/comments'
       last_response.should be_ok
@@ -30,23 +38,16 @@ describe "app" do
   end
 
   describe "create top-level comments" do
-    it "should create a comment" do
-      post '/api/v1/questions/1/comments', :body => "comment body", :title => "comment title", :user_id => 0, :course_id => 1
+    
+    it "should create a top-level comment with correct body, title, user_id, and course_id" do
+      post '/api/v1/questions/1/comments', :body => "comment body", :title => "comment title", :user_id => 1, :course_id => 1
       last_response.should be_ok
-      Comment.first.should_not be_nil
+      comment = CommentThread.first.super_comment.children.first
+      comment.body.should == "comment body"
+      comment.title.should == "comment title"
+      comment.user_id.should == 1
+      comment.user_id.should == 1
     end
 
-    it "should create a comment with correct body, title, user_id, and course_id" do
-      post '/api/v1/questions/1/comments', :body => "comment body", :title => "comment title", :user_id => 1, :course_id => 1
-      Comment.first.body.should == "comment body"
-      Comment.first.title.should == "comment title"
-      Comment.first.user_id.should == 1
-      Comment.first.user_id.should == 1
-    end
-
-    it "should create a top-level comment" do
-      post '/api/v1/questions/1/comments', :body => "comment body", :title => "comment title", :user_id => 1, :course_id => 1
-      CommentThread.first.super_comment.children.first.should == Comment.first
-    end
   end
 end

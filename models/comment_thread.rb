@@ -10,11 +10,15 @@ class CommentThread < ActiveRecord::Base
   # Ensures that there is only one thread for each commentable object
   validates_uniqueness_of :commentable_id, :scope => :commentable_type
 
+  # Helper class method to create a new thread with the corresponding super comment
+  #def self.find_or_build(commentable_type, commentable_id)
+  #  comment_thread = CommentThread.find_or_create_by_commentable_type_and_commentable
+
   # Create a super comment which does not hold anything itself, but points to all comments of the thread
   after_create :create_super_comment
   
   def create_super_comment
-    Comment.create! :comment_thread => self
+    comment = Comment.create! :comment_thread => self
   end
 
   def json_comments
