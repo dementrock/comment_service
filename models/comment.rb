@@ -14,7 +14,7 @@ class Comment < ActiveRecord::Base
   def self.json_tree(nodes)
     nodes.map do |node, sub_nodes|
       node.to_json.merge(:children => json_tree(sub_nodes).compact)
-    end
+    end.to_json
   end
 
   def to_json_tree

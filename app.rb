@@ -19,8 +19,12 @@ class Service < Sinatra::Base
   end
 
   get '/api/v1/:commentable_type/:commentable_id/comments' do
-    comment_thread = CommentThread.find_or_create_by_commentable_type_and_commentable_id params[:commentable_type], params[:commentable_id]
-    comment_thread.super
+    if params[:commentable_id].to_i.to_s == params[:commentable_id]
+      comment_thread = CommentThread.find_or_create_by_commentable_type_and_commentable_id params[:commentable_type], params[:commentable_id]
+      comment_thread.json_comments
+    else
+      error 400, {:error => "commentable_id must be an integer"}.to_json
+    end
   end
 
 end
