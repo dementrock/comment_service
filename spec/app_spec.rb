@@ -67,14 +67,18 @@ describe "app" do
     end
   end
   describe "retrive comments" do
-    before :each do
+    it "returns an empty array when there are no comments" do
+      get "/api/v1/questions/1/comments"
+      last_response.should be_ok
+      comments = Yajl::Parser.parse last_response.body
+      comments.length.should == 0
+    end
+    it "retrives all comments in a nested structure in json format" do
       comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
       comment1 = comment_thread.comments.create :body => "top comment", :title => "top1", :user_id => 1, :course_id => 1
       sub_comment1 = comment1.children.create :body => "comment body", :title => "comment title 1", :user_id => 1, :course_id => 1
       comment2 = comment_thread.comments.create :body => "top comment", :title => "top2", :user_id => 1, :course_id => 1
       sub_comment2 = comment2.children.create :body => "comment body", :title => "comment title 2", :user_id => 1, :course_id => 1
-    end
-    it "retrives all comments in a nested structure in json format" do
       get "/api/v1/questions/1/comments"
       last_response.should be_ok
       comments = Yajl::Parser.parse last_response.body
