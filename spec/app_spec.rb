@@ -7,9 +7,9 @@ describe "app" do
       Comment.delete_all
       CommentThread.delete_all
     end
-    describe "POST on /api/v1/commentable/:commentable_type/:commentable_id/comments" do
+    describe "POST on /api/v1/commentables/:commentable_type/:commentable_id/comments" do
       it "should create a top-level comment with correct body, title, user_id, and course_id" do
-        post "/api/v1/commentable/questions/1/comments", :body => "comment body", :title => "comment title", :user_id => 1, :course_id => 1
+        post "/api/v1/commentables/questions/1/comments", :body => "comment body", :title => "comment title", :user_id => 1, :course_id => 1
         last_response.should be_ok
         comment = CommentThread.first.root_comments.first
         comment.should_not be_nil
@@ -19,13 +19,13 @@ describe "app" do
         comment.user_id.should == 1
       end
     end
-    describe "POST on /api/v1/comment/:comment_id" do
+    describe "POST on /api/v1/comments/:comment_id" do
       before :each do
         CommentThread.create! :commentable_type => "questions", :commentable_id => 1
         CommentThread.first.root_comments.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1
       end
       it "should create a sub comment with correct body, title, user_id, and course_id" do
-        post "/api/v1/comment/#{CommentThread.first.root_comments.first.id}", 
+        post "/api/v1/comments/#{CommentThread.first.root_comments.first.id}", 
              :body => "comment body", :title => "comment title", :user_id => 1, :course_id => 1
         last_response.should be_ok
         comment = CommentThread.first.root_comments.first.children.first
@@ -36,28 +36,28 @@ describe "app" do
         comment.user_id.should == 1
       end
       it "should not create a sub comment for the super comment" do
-        post "/api/v1/comment/#{CommentThread.first.super_comment.id}", 
+        post "/api/v1/comments/#{CommentThread.first.super_comment.id}", 
              :body => "comment body", :title => "comment title", :user_id => 1, :course_id => 1
         last_response.status.should == 400
       end
     end
-    describe "GET on /api/v1/commentable/:commentable_type/:commentable_id/comments" do
+    describe "GET on /api/v1/commentables/:commentable_type/:commentable_id/comments" do
       it "should create a corresponding comment thread with a super comment" do
-        get "/api/v1/commentable/questions/1/comments"
+        get "/api/v1/commentables/questions/1/comments"
         last_response.should be_ok
         comment_thread = CommentThread.first
         comment_thread.should_not be_nil
         comment_thread.super_comment.should_not be_nil
       end
       it "should create a corresponding comment thread with correct type and id" do
-        get "/api/v1/commentable/questions/1/comments"
+        get "/api/v1/commentables/questions/1/comments"
         last_response.should be_ok
         comment_thread = CommentThread.first
         comment_thread.commentable_type.should == 'questions'
         comment_thread.commentable_id.should == '1'
       end
       it "returns an empty array when there are no comments" do
-        get "/api/v1/commentable/questions/1/comments"
+        get "/api/v1/commentables/questions/1/comments"
         last_response.should be_ok
         comments = Yajl::Parser.parse last_response.body
         comments.length.should == 0
@@ -70,22 +70,22 @@ describe "app" do
         sub_comment << (comment[0].children.create :body => "comment body", :title => "comment title 0", :user_id => 1, :course_id => 1)
         comment << (comment_thread.root_comments.create :body => "top comment", :title => "top 1", :user_id => 1, :course_id => 1)
         sub_comment << (comment[1].children.create :body => "comment body", :title => "comment title 1", :user_id => 1, :course_id => 1)
-        get "/api/v1/commentable/questions/1/comments"
+        get "/api/v1/commentables/questions/1/comments"
         last_response.should be_ok
         comments = Yajl::Parser.parse last_response.body
         comments.length.should == 2
         comments.each_with_index do |c, index|
           c["title"].should == "top #{index}"
           c["id"].should == comment[index].id
-          c["reply_url"].should == "/api/v1/comment/#{comment[index].id}"
+          c["reply_url"].should == "/api/v1/comments/#{comment[index].id}"
           c["children"].length.should == 1
           c["children"][0]["title"].should == "comment title #{index}"
           c["children"][0]["id"].should == sub_comment[index].id
-          c["children"][0]["reply_url"].should == "/api/v1/comment/#{sub_comment[index].id}"
+          c["children"][0]["reply_url"].should == "/api/v1/comments/#{sub_comment[index].id}"
         end
       end
     end
-    describe "DELETE on /api/v1/commentable/:commentable_type/:commentable_id" do
+    describe "DELETE on /api/v1/commentables/:commentable_type/:commentable_id" do
       before :each do
         comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
         comment = []
@@ -96,11 +96,11 @@ describe "app" do
         sub_comment << (comment[1].children.create :body => "comment body", :title => "comment title 1", :user_id => 1, :course_id => 1)
       end
       it "should return error when called on a nonexisted thread" do
-        delete "/api/v1/commentable/i_do_not_exist/1"
+        delete "/api/v1/commentables/i_do_not_exist/1"
         last_response.status.should == 400
       end
       it "deletes all comments associated with a thread when called on the thread" do
-        delete "/api/v1/commentable/questions/1"      
+        delete "/api/v1/commentables/questions/1"      
         last_response.should be_ok
         CommentThread.count.should == 0
         Comment.count.should == 0
@@ -108,7 +108,7 @@ describe "app" do
       it "deletes the comment and all sub comments when called on the comment" do
         comment_thread = CommentThread.first
         comment = comment_thread.root_comments.first
-        delete "/api/v1/comment/#{comment.id}"
+        delete "/api/v1/comments/#{comment.id}"
         last_response.should be_ok
         comment_thread.root_comments.count.should == 1
         comment_thread.comments.count.should == 2
@@ -118,18 +118,18 @@ describe "app" do
       it "should not delete the super comment" do
         comment_thread = CommentThread.first
         comment = comment_thread.super_comment
-        delete "/api/v1/comment/#{comment.id}"
+        delete "/api/v1/comments/#{comment.id}"
         last_response.status.should == 400
       end
     end
-    describe "PUT on /api/v1/comment/comment_id" do
+    describe "PUT on /api/v1/comments/comment_id" do
       before :each do
         comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
         comment_thread.root_comments.create :body => "top comment", :title => "top 0", :user_id => 1, :course_id => 1
       end
       it "should update body and title" do
         comment = CommentThread.first.comments.first
-        put "/api/v1/comment/#{comment.id}", :body => "new body", :title => "new title"
+        put "/api/v1/comments/#{comment.id}", :body => "new body", :title => "new title"
         last_response.should be_ok
         comment = CommentThread.first.comments.first
         comment.body.should == "new body"
@@ -137,12 +137,12 @@ describe "app" do
       end
       it "should not update the super comment" do
         comment = CommentThread.first.super_comment
-        put "/api/v1/comment/#{comment.id}", :body => "new body", :title => "new title"
+        put "/api/v1/comments/#{comment.id}", :body => "new body", :title => "new title"
         last_response.status.should == 400
       end
       it "should not update user_id nor course_id" do
         comment = CommentThread.first.comments.first
-        put "/api/v1/comment/#{comment.id}", :user_id => 100, :course_id => 100
+        put "/api/v1/comments/#{comment.id}", :user_id => 100, :course_id => 100
         last_response.should be_ok
         comment = CommentThread.first.comments.first
         comment.user_id.should == 1
@@ -217,7 +217,7 @@ describe "app" do
         last_response.status.should == 400
       end
     end
-    describe "GET on /api/v1/votes/comments/:comment_id/total" do
+    describe "GET on /api/v1/votes/comments/:comment_id/totals" do
       it "returns the up and down vote total" do
         comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
         comment = CommentThread.first.root_comments.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1
@@ -228,7 +228,7 @@ describe "app" do
         Vote.create! :value => "down", :comment_id => comment.id, :user_id => 5
         Vote.create! :value => "down", :comment_id => comment.id, :user_id => 6
         Vote.create! :value => "down", :comment_id => comment.id, :user_id => 7
-        get "/api/v1/votes/comments/#{comment.id}/total"
+        get "/api/v1/votes/comments/#{comment.id}/totals"
         last_response.should be_ok
         values = Yajl::Parser.parse last_response.body
         values["up"].should == 4

@@ -14,13 +14,13 @@ databases = YAML.load_file("config/database.yml")
 ActiveRecord::Base.establish_connection(databases[env])
 
 # retrive all comments of a commentable object
-get '/api/v1/commentable/:commentable_type/:commentable_id/comments' do |commentable_type, commentable_id|
+get '/api/v1/commentables/:commentable_type/:commentable_id/comments' do |commentable_type, commentable_id|
   comment_thread = CommentThread.find_or_create_by_commentable_type_and_commentable_id(commentable_type, commentable_id)
   comment_thread.json_comments
 end
 
 # create a new top-level comment
-post '/api/v1/commentable/:commentable_type/:commentable_id/comments' do |commentable_type, commentable_id|
+post '/api/v1/commentables/:commentable_type/:commentable_id/comments' do |commentable_type, commentable_id|
   comment_thread = CommentThread.find_or_create_by_commentable_type_and_commentable_id(commentable_type, commentable_id)
   comment_params = params.select {|key, value| %w{body title user_id course_id}.include? key}
   comment = comment_thread.root_comments.create(comment_params)
@@ -32,7 +32,7 @@ post '/api/v1/commentable/:commentable_type/:commentable_id/comments' do |commen
 end
 
 # delete a commentable object and its associated comments
-delete '/api/v1/commentable/:commentable_type/:commentable_id' do |commentable_type, commentable_id|
+delete '/api/v1/commentables/:commentable_type/:commentable_id' do |commentable_type, commentable_id|
   comment_thread = CommentThread.find_by_commentable_type_and_commentable_id(commentable_type, commentable_id)
   if comment_thread.nil?
     error 400, {:error => "commentable object does not exist"}.to_json
@@ -43,7 +43,7 @@ delete '/api/v1/commentable/:commentable_type/:commentable_id' do |commentable_t
 end
 
 # create a new subcomment (reply to comment) only if the comment is NOT a super comment
-post '/api/v1/comment/:comment_id' do |comment_id|
+post '/api/v1/comments/:comment_id' do |comment_id|
   comment = Comment.find_by_id(comment_id)
   if comment.nil? or comment.is_root?
     error 400, {:error => "invalid comment id"}.to_json
@@ -59,7 +59,7 @@ post '/api/v1/comment/:comment_id' do |comment_id|
 end
 
 # delete the comment and the associated sub comments only if the comment is NOT the super comment
-delete '/api/v1/comment/:comment_id' do |comment_id|
+delete '/api/v1/comments/:comment_id' do |comment_id|
   comment = Comment.find_by_id(comment_id)
   if comment.nil? or comment.is_root?
     error 400, {:error => "invalid comment id"}.to_json
@@ -70,7 +70,7 @@ delete '/api/v1/comment/:comment_id' do |comment_id|
 end
 
 # update the body / title (or both) of a comment provided the comment is NOT the super comment
-put '/api/v1/comment/:comment_id' do |comment_id|
+put '/api/v1/comments/:comment_id' do |comment_id|
   comment = Comment.find_by_id(comment_id)
   if comment.nil? or comment.is_root?
     error 400, {:error => "invalid comment id"}.to_json
@@ -115,7 +115,7 @@ delete '/api/v1/votes/comments/:comment_id/users/:user_id' do |comment_id, user_
 end
 
 # return the up and down votes total for the comment
-get '/api/v1/votes/comments/:comment_id/total' do |comment_id|
+get '/api/v1/votes/comments/:comment_id/totals' do |comment_id|
   data = {
     :up => Vote.comment_id(comment_id).up.count,
     :down => Vote.comment_id(comment_id).down.count
