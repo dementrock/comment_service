@@ -45,11 +45,10 @@ post '/api/v1/:commentable_type/:commentable_id/comments' do |commentable_type, 
 end
 
 # create a new subcomment (reply to comment) only if the comment is NOT a super comment
-post '/api/v1/:commentable_type/:commentable_id/comment/:comment_id' do |commentable_type, commentable_id, comment_id|
-  if not commentable_id.is_i? or not comment_id.is_i?
-    error 400, {:error => "commentable_id and comment_id must be integers"}.to_json
+post '/api/v1/comment/:comment_id' do |comment_id|
+  if not comment_id.is_i?
+    error 400, {:error => "comment_id must be integers"}.to_json
   else
-    comment_thread = CommentThread.find_or_create_by_commentable_type_and_commentable_id(commentable_type, commentable_id)
     comment = Comment.find_by_id(comment_id)
     if comment.nil? or not comment.comment_thread.nil?
       error 400, {:error => "invalid comment id"}.to_json

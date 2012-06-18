@@ -48,7 +48,7 @@ describe "app" do
       CommentThread.first.comments.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1
     end
     it "should create a sub comment with correct body, title, user_id, and course_id" do
-      post "/api/v1/questions/1/comment/#{CommentThread.first.comments.first.id}", 
+      post "/api/v1/comment/#{CommentThread.first.comments.first.id}", 
            :body => "comment body", :title => "comment title", :user_id => 1, :course_id => 1
       last_response.should be_ok
       comment = CommentThread.first.comments.first.children.first
