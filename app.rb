@@ -23,6 +23,7 @@ end
 post '/api/v1/commentables/:commentable_type/:commentable_id/comments' do |commentable_type, commentable_id|
   comment_thread = CommentThread.find_or_create_by_commentable_type_and_commentable_id(commentable_type, commentable_id)
   comment_params = params.select {|key, value| %w{body title user_id course_id}.include? key}
+  comment_params.merge :comment_thread_id => comment_thread.id
   comment = comment_thread.root_comments.create(comment_params)
   if comment.valid?
     comment.to_json
@@ -49,6 +50,7 @@ post '/api/v1/comments/:comment_id' do |comment_id|
     error 400, {:error => "invalid comment id"}.to_json
   else
     comment_params = params.select {|key, value| %w{body title user_id course_id}.include? key}
+    comment_params.merge :comment_thread_id => comment.root.comment_thread.id
     sub_comment = comment.children.create(comment_params)
     if comment.valid?
       comment.to_json
@@ -121,4 +123,13 @@ get '/api/v1/votes/comments/:comment_id/totals' do |comment_id|
     :down => Vote.comment_id(comment_id).down.count
   }
   data.to_json
+end
+
+if env.to_s == "development"
+  get '/api/v1/clean' do
+    Comment.delete_all
+    CommentThread.delete_all
+    Vote.delete_all
+    {}.to_json
+  end
 end

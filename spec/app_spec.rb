@@ -22,7 +22,7 @@ describe "app" do
     describe "POST on /api/v1/comments/:comment_id" do
       before :each do
         CommentThread.create! :commentable_type => "questions", :commentable_id => 1
-        CommentThread.first.root_comments.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1
+        CommentThread.first.root_comments.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1, :comment_thread_id => CommentThread.first.id
       end
       it "should create a sub comment with correct body, title, user_id, and course_id" do
         post "/api/v1/comments/#{CommentThread.first.root_comments.first.id}", 
@@ -66,10 +66,10 @@ describe "app" do
         comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
         comment = []
         sub_comment = []
-        comment << (comment_thread.root_comments.create :body => "top comment", :title => "top 0", :user_id => 1, :course_id => 1)
-        sub_comment << (comment[0].children.create :body => "comment body", :title => "comment title 0", :user_id => 1, :course_id => 1)
-        comment << (comment_thread.root_comments.create :body => "top comment", :title => "top 1", :user_id => 1, :course_id => 1)
-        sub_comment << (comment[1].children.create :body => "comment body", :title => "comment title 1", :user_id => 1, :course_id => 1)
+        comment << (comment_thread.root_comments.create :body => "top comment", :title => "top 0", :user_id => 1, :course_id => 1, :comment_thread_id => comment_thread.id)
+        sub_comment << (comment[0].children.create :body => "comment body", :title => "comment title 0", :user_id => 1, :course_id => 1, :comment_thread_id => comment_thread.id)
+        comment << (comment_thread.root_comments.create :body => "top comment", :title => "top 1", :user_id => 1, :course_id => 1, :comment_thread_id => comment_thread.id)
+        sub_comment << (comment[1].children.create :body => "comment body", :title => "comment title 1", :user_id => 1, :course_id => 1, :comment_thread_id => comment_thread.id)
         get "/api/v1/commentables/questions/1/comments"
         last_response.should be_ok
         comments = Yajl::Parser.parse last_response.body
@@ -90,10 +90,10 @@ describe "app" do
         comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
         comment = []
         sub_comment = []
-        comment << (comment_thread.root_comments.create :body => "top comment", :title => "top 0", :user_id => 1, :course_id => 1)
-        sub_comment << (comment[0].children.create :body => "comment body", :title => "comment title 0", :user_id => 1, :course_id => 1)
-        comment << (comment_thread.root_comments.create :body => "top comment", :title => "top 1", :user_id => 1, :course_id => 1)
-        sub_comment << (comment[1].children.create :body => "comment body", :title => "comment title 1", :user_id => 1, :course_id => 1)
+        comment << (comment_thread.root_comments.create :body => "top comment", :title => "top 0", :user_id => 1, :course_id => 1, :comment_thread_id => comment_thread.id)
+        sub_comment << (comment[0].children.create :body => "comment body", :title => "comment title 0", :user_id => 1, :course_id => 1, :comment_thread_id => comment_thread.id)
+        comment << (comment_thread.root_comments.create :body => "top comment", :title => "top 1", :user_id => 1, :course_id => 1, :comment_thread_id => comment_thread.id)
+        sub_comment << (comment[1].children.create :body => "comment body", :title => "comment title 1", :user_id => 1, :course_id => 1, :comment_thread_id => comment_thread.id)
       end
       it "should return error when called on a nonexisted thread" do
         delete "/api/v1/commentables/i_do_not_exist/1"
@@ -125,7 +125,7 @@ describe "app" do
     describe "PUT on /api/v1/comments/comment_id" do
       before :each do
         comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
-        comment_thread.root_comments.create :body => "top comment", :title => "top 0", :user_id => 1, :course_id => 1
+        comment_thread.root_comments.create :body => "top comment", :title => "top 0", :user_id => 1, :course_id => 1, :comment_thread_id => comment_thread.id
       end
       it "should update body and title" do
         comment = CommentThread.first.comments.first
@@ -202,7 +202,7 @@ describe "app" do
     describe "DELETE on /api/v1/votes/comments/:comment_id/users/:user_id" do
       before :each do
         CommentThread.create! :commentable_type => "questions", :commentable_id => 1
-        CommentThread.first.root_comments.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1
+        CommentThread.first.root_comments.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1, :comment_thread_id => CommentThread.first.id
       end
       it "deletes vote" do
         comment = CommentThread.first.comments.first 
@@ -220,7 +220,7 @@ describe "app" do
     describe "GET on /api/v1/votes/comments/:comment_id/totals" do
       it "returns the up and down vote total" do
         comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
-        comment = CommentThread.first.root_comments.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1
+        comment = CommentThread.first.root_comments.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1, :comment_thread_id => CommentThread.first.id
         Vote.create! :value => "up", :comment_id => comment.id, :user_id => 1
         Vote.create! :value => "up", :comment_id => comment.id, :user_id => 2
         Vote.create! :value => "up", :comment_id => comment.id, :user_id => 3
