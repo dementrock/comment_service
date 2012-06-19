@@ -17,9 +17,9 @@ class Comment < ActiveRecord::Base
         :id => node.id,
         :body => node.body, 
         :title => node.title, 
-        :reply_url => "/api/v1/comments/#{node.id}",
         :user_id => node.user_id, 
         :course_id => node.course_id,
+        :comment_thread_id => node.comment_thread_id,
         :children => hash_tree(sub_nodes).compact
       }
     end

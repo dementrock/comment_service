@@ -77,11 +77,10 @@ describe "app" do
         comments.each_with_index do |c, index|
           c["title"].should == "top #{index}"
           c["id"].should == comment[index].id
-          c["reply_url"].should == "/api/v1/comments/#{comment[index].id}"
+          c["comment_thread_id"].should == comment_thread.id
           c["children"].length.should == 1
           c["children"][0]["title"].should == "comment title #{index}"
           c["children"][0]["id"].should == sub_comment[index].id
-          c["children"][0]["reply_url"].should == "/api/v1/comments/#{sub_comment[index].id}"
         end
       end
     end
