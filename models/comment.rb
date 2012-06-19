@@ -19,6 +19,8 @@ class Comment < ActiveRecord::Base
         :title => node.title, 
         :user_id => node.user_id, 
         :course_id => node.course_id,
+        :created_at => node.created_at,
+        :updated_at => node.updated_at,
         :comment_thread_id => node.comment_thread_id,
         :children => hash_tree(sub_nodes).compact
       }

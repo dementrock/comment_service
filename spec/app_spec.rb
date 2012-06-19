@@ -78,9 +78,13 @@ describe "app" do
           c["title"].should == "top #{index}"
           c["id"].should == comment[index].id
           c["comment_thread_id"].should == comment_thread.id
+          c["created_at"].should_not be_nil
+          c["updated_at"].should_not be_nil
           c["children"].length.should == 1
           c["children"][0]["title"].should == "comment title #{index}"
           c["children"][0]["id"].should == sub_comment[index].id
+          c["children"][0]["created_at"].should_not be_nil
+          c["children"][0]["updated_at"].should_not be_nil
         end
       end
     end
