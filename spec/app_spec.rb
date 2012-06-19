@@ -62,30 +62,37 @@ describe "app" do
         comments = Yajl::Parser.parse last_response.body
         comments.length.should == 0
       end
-      it "retrieves all comments in a nested structure in json format" do
+      it "retrieves all comments with their votes in a nested structure in json format" do
         comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
         comment = []
         sub_comment = []
         comment << (comment_thread.root_comments.create :body => "top comment", :title => "top 0", :user_id => 1, :course_id => 1, :comment_thread_id => comment_thread.id)
         sub_comment << (comment[0].children.create :body => "comment body", :title => "comment title 0", :user_id => 1, :course_id => 1, :comment_thread_id => comment_thread.id)
-        comment << (comment_thread.root_comments.create :body => "top comment", :title => "top 1", :user_id => 1, :course_id => 1, :comment_thread_id => comment_thread.id)
-        sub_comment << (comment[1].children.create :body => "comment body", :title => "comment title 1", :user_id => 1, :course_id => 1, :comment_thread_id => comment_thread.id)
+        sub_comment << (comment[0].children.create :body => "comment body", :title => "comment title 1", :user_id => 1, :course_id => 1, :comment_thread_id => comment_thread.id)
+        Vote.create! :value => "up", :comment_id => comment[0].id, :user_id => 1
+        Vote.create! :value => "up", :comment_id => comment[0].id, :user_id => 2
+        Vote.create! :value => "up", :comment_id => comment[0].id, :user_id => 3
+        Vote.create! :value => "up", :comment_id => comment[0].id, :user_id => 4
+        Vote.create! :value => "down", :comment_id => comment[0].id, :user_id => 5
+        Vote.create! :value => "down", :comment_id => comment[0].id, :user_id => 6
+        Vote.create! :value => "down", :comment_id => comment[0].id, :user_id => 7
         get "/api/v1/commentables/questions/1/comments"
         last_response.should be_ok
         comments = Yajl::Parser.parse last_response.body
-        comments.length.should == 2
-        comments.each_with_index do |c, index|
-          c["title"].should == "top #{index}"
-          c["id"].should == comment[index].id
-          c["comment_thread_id"].should == comment_thread.id
-          c["created_at"].should_not be_nil
-          c["updated_at"].should_not be_nil
-          c["children"].length.should == 1
-          c["children"][0]["title"].should == "comment title #{index}"
-          c["children"][0]["id"].should == sub_comment[index].id
-          c["children"][0]["created_at"].should_not be_nil
-          c["children"][0]["updated_at"].should_not be_nil
-        end
+        comments.length.should == 1
+        c = comments[0]
+        c["title"].should == "top 0"
+        c["id"].should == comment[0].id
+        c["votes"]["up"].should == 4
+        c["votes"]["down"].should == 3
+        c["comment_thread_id"].should == comment_thread.id
+        c["created_at"].should_not be_nil
+        c["updated_at"].should_not be_nil
+        c["children"].length.should == 2
+        c["children"][0]["title"].should == "comment title 0"
+        c["children"][0]["id"].should == sub_comment[0].id
+        c["children"][0]["created_at"].should_not be_nil
+        c["children"][0]["updated_at"].should_not be_nil
       end
     end
     describe "DELETE on /api/v1/commentables/:commentable_type/:commentable_id" do
@@ -218,24 +225,6 @@ describe "app" do
         comment = CommentThread.first.comments.first 
         delete "/api/v1/votes/comments/#{comment.id}/users/1"
         last_response.status.should == 400
-      end
-    end
-    describe "GET on /api/v1/votes/comments/:comment_id/totals" do
-      it "returns the up and down vote total" do
-        comment_thread = CommentThread.create! :commentable_type => "questions", :commentable_id => 1
-        comment = CommentThread.first.root_comments.create :body => "top comment", :title => "top", :user_id => 1, :course_id => 1, :comment_thread_id => CommentThread.first.id
-        Vote.create! :value => "up", :comment_id => comment.id, :user_id => 1
-        Vote.create! :value => "up", :comment_id => comment.id, :user_id => 2
-        Vote.create! :value => "up", :comment_id => comment.id, :user_id => 3
-        Vote.create! :value => "up", :comment_id => comment.id, :user_id => 4
-        Vote.create! :value => "down", :comment_id => comment.id, :user_id => 5
-        Vote.create! :value => "down", :comment_id => comment.id, :user_id => 6
-        Vote.create! :value => "down", :comment_id => comment.id, :user_id => 7
-        get "/api/v1/votes/comments/#{comment.id}/totals"
-        last_response.should be_ok
-        values = Yajl::Parser.parse last_response.body
-        values["up"].should == 4
-        values["down"].should == 3
       end
     end
   end

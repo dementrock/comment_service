@@ -22,7 +22,8 @@ class Comment < ActiveRecord::Base
         :created_at => node.created_at,
         :updated_at => node.updated_at,
         :comment_thread_id => node.comment_thread_id,
-        :children => hash_tree(sub_nodes).compact
+        :children => hash_tree(sub_nodes).compact,
+        :votes => {:up => Vote.comment_id(node.id).up.count, :down => Vote.comment_id(node.id).down.count},
       }
     end
   end

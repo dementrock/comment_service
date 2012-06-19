@@ -116,15 +116,6 @@ delete '/api/v1/votes/comments/:comment_id/users/:user_id' do |comment_id, user_
   end
 end
 
-# return the up and down votes total for the comment
-get '/api/v1/votes/comments/:comment_id/totals' do |comment_id|
-  data = {
-    :up => Vote.comment_id(comment_id).up.count,
-    :down => Vote.comment_id(comment_id).down.count
-  }
-  data.to_json
-end
-
 if env.to_s == "development"
   get '/api/v1/clean' do
     Comment.delete_all
